@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \"c:\\\\Users\\\\rSTAR_User\\\\Documents\\\\Invsestment\\\\TradeSelect\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import uvicorn; print\\(uvicorn.__version__\\)\")"
+    ]
+  }
+}

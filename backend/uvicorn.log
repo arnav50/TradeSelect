@@ -1,0 +1,5 @@
+INFO:     127.0.0.1:55533 - "GET /api/scan/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61441 - "GET /api/scan/candidate/RAILTEL HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62106 - "GET /api/scan/latest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51564 - "GET /api/scan/candidate/HBLENGINE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58016 - "GET /api/scan/candidate/PARAS HTTP/1.1" 200 OK

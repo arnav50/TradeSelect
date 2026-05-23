@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
 
     data_dir: str = "./data"
-    use_mock_data: bool = True
+    use_mock_data: bool = False
 
 
 settings = Settings()

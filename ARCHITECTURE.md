@@ -41,7 +41,7 @@ similarity-and-co-occurrence matrix.
 | `jugaad-data` | NSE/BSE historical OHLCV, bhavcopy, derivatives | Most reliable free NSE source; supports bulk pull. |
 | `nsepy` | Older NSE historical fallback | Use as secondary if `jugaad-data` 429s. |
 | `nsetools` | NSE quotes + index constituents | Source-of-truth for symbol universe. |
-| `yfinance` | Cross-check + fallback for missing symbols | `.NS` / `.BO` suffix. |
+| `yfinance` | **Active source today (Phase 0.5)**; long-term: cross-check + fallback | `.NS` / `.BO` suffix. Used by `ingestion/yf_quotes.py` to overlay real EOD prices onto the mock candidate list. |
 | `bsedata` | BSE quotes / corporate actions | Fills BSE-only listings. |
 
 ### 3.2 Technical analysis (Python)
@@ -117,10 +117,15 @@ TradeSelect/
 │   │   ├── scheduler.py           ← APScheduler daily run
 │   │   │
 │   │   ├── ingestion/
+│   │   │   ├── yf_quotes.py       ← [Phase 0.5] yfinance EOD overlay (active today)
 │   │   │   ├── universe.py        ← Full NSE+BSE symbol master
 │   │   │   ├── ohlcv.py           ← Bulk fetch via jugaad-data
 │   │   │   ├── intraday.py        ← 15m/1h/4h aggregations
 │   │   │   └── corporate.py       ← Splits/bonus adjustments
+│   │   │
+│   │   ├── data/                  ← [Phase 0/0.5] scan builders before the real pipeline lands
+│   │   │   ├── mock_candidates.py ← Hardcoded contract reference
+│   │   │   └── live_candidates.py ← Overlays yf_quotes onto the mock shape
 │   │   │
 │   │   ├── storage/
 │   │   │   ├── db.py              ← DuckDB connection
@@ -476,15 +481,22 @@ there is no CORS dance in dev.
 ## 14. Roadmap (build in this order)
 
 1. **Phase 0 — Skeleton:** repo, FastAPI hello, Vite hello, one end-to-end fetch.
-2. **Phase 1 — Ingestion:** universe + daily OHLCV for Nifty 500 only.
-3. **Phase 2 — Classical TA + Step 1 filter:** prove the 20–30%/15–30d filter
+2. **Phase 0.5 — Live overlay (current):** `ingestion/yf_quotes.py` + `data/live_candidates.py`
+   fetch real EOD `last_price` and 20-day traded value (₹ crore) from yfinance for the
+   ~10 hardcoded symbols, recompute entry/stop/target zones off the real price, and
+   auto-set `low_liquidity` when avg traded value < ₹1 cr. Conviction scores and signal
+   booleans remain mocked. Toggle via `TRADESELECT_USE_MOCK_DATA=true` to fall back to
+   pure mock. Each `/scan/latest` hits yfinance once per symbol — no caching yet (that
+   arrives with Phase 1's parquet store).
+3. **Phase 1 — Ingestion:** universe + daily OHLCV for Nifty 500 only.
+4. **Phase 2 — Classical TA + Step 1 filter:** prove the 20–30%/15–30d filter
    produces a sane cohort. Render `CandidateTable` with classical-only scores.
-4. **Phase 3 — SMC module:** add `step03_smc.py`, render OB + FVG overlays.
-5. **Phase 4 — Gann module:** add `step04_gann.py`, render angles + SQ9 lines.
-6. **Phase 5 — Full universe:** extend ingestion to BSE + SME, throttling.
-7. **Phase 6 — Similarity & co-occurrence:** Step 12 table + matrix page.
-8. **Phase 7 — Scheduler:** APScheduler 18:30 IST run; SSE progress.
-9. **Phase 8 — Backtest harness:** replay prior months, validate that the
+5. **Phase 3 — SMC module:** add `step03_smc.py`, render OB + FVG overlays.
+6. **Phase 4 — Gann module:** add `step04_gann.py`, render angles + SQ9 lines.
+7. **Phase 5 — Full universe:** extend ingestion to BSE + SME, throttling.
+8. **Phase 6 — Similarity & co-occurrence:** Step 12 table + matrix page.
+9. **Phase 7 — Scheduler:** APScheduler 18:30 IST run; SSE progress.
+10. **Phase 8 — Backtest harness:** replay prior months, validate that the
    ≥10/15 filter would have caught past 20–30% movers. **This is the only
    validation that matters** — every other metric is decoration.
 
